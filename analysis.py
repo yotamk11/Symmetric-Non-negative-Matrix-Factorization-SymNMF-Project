@@ -55,7 +55,6 @@ def main():
     nmf_labels = np.argmax(final_H, axis=1)
 
     # 3. KMeans Clustering
-    # Note: Kmeans from HW uses first K points as initial centroids
     final_centroids = kmeans.kmeans_alg(k, data_points, max_iter, epsilon)
     kmeans_labels = get_labels(data_points, final_centroids)
 
