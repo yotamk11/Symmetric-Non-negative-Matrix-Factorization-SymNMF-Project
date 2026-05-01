@@ -8,7 +8,13 @@ max_iter = 300
 epsilon = 1e-4
 
 def get_labels(data, centroids):
-    """Assigns each point to the closest centroid to get cluster labels."""
+    """Assigns each point to the closest centroid to get cluster labels.
+    Args:
+        data: List of data points (list of lists).
+        centroids: List of centroid points (list of lists).
+    Returns:
+        List of cluster labels."""
+    
     labels = []
     for point in data:
         min_dist = float('inf')
@@ -22,14 +28,17 @@ def get_labels(data, centroids):
     return labels
 
 def main():
+    """Main function to perform clustering analysis using SymNMF and KMeans.
+    Usage: python analysis.py <k> <input_file>
+    where:
+        k: The number of clusters.
+        input_file: The file containing the data points."""
+
     if len(sys.argv) < 3:
         print("An Error Has Occurred")
         sys.exit(1)
-    
     k = int(sys.argv[1])
     file_name = sys.argv[2]
-
-    
 
     # 1. Load Data
     data_points = pd.read_csv(file_name, header=None).values.tolist()
@@ -38,12 +47,11 @@ def main():
         raise ValueError("Invalid number of clusters")
     d = len(data_points[0])
 
-
     # 2. SymNMF Clustering
     # Get normalized matrix W
     W = symnmf.norm(data_points, n, d)
     
-    # Initialize H (Section 1.4.1)
+    # Initialize H
     np.random.seed(1234)
     m = np.mean(W)
     upper_bound = 2 * np.sqrt(m / k)
@@ -58,11 +66,9 @@ def main():
     final_centroids = kmeans.kmeans_alg(k, data_points, max_iter, epsilon)
     kmeans_labels = get_labels(data_points, final_centroids)
 
-    # 4. Calculate Scores
+    # 4. Calculate Scores and output results
     nmf_score = silhouette_score(data_points, nmf_labels)
     km_score = silhouette_score(data_points, kmeans_labels)
-        
-    # 5. Output Results (Section 1.5)
     print(f"nmf: {nmf_score:.4f}")
     print(f"kmeans: {km_score:.4f}")
 

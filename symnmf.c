@@ -20,6 +20,9 @@ void handle_error() {
 
 /**
  * Allocates a 2D array of doubles (matrix) with given rows and columns.
+ * Args:
+ *   rows: Number of rows in the matrix.
+ *   cols: Number of columns in the matrix.
  * Returns a pointer to the array of pointers (double**).
  */
 double** allocate_matrix(int rows, int cols) {
@@ -44,6 +47,9 @@ double** allocate_matrix(int rows, int cols) {
 
 /**
  * Frees the memory allocated for a 2D array of doubles.
+ * Args:
+ *   matrix: The 2D array to be freed.
+ *   rows: The number of rows in the matrix.
  */
 void free_matrix(double **matrix, int rows) {
     int i;
@@ -57,6 +63,11 @@ void free_matrix(double **matrix, int rows) {
 /**
  * Copies the content of one matrix (src) to another (dst).
  * Both matrices must have the same dimensions.
+ * Args:
+ *   src: The source matrix to copy from.
+ *   dst: The destination matrix to copy to.
+ *   rows: The number of rows in the matrices.
+ *   cols: The number of columns in the matrices.
  */
 void copy_matrix(double **src, double **dst, int rows, int cols) {
     int i, j;
@@ -69,7 +80,13 @@ void copy_matrix(double **src, double **dst, int rows, int cols) {
 
 /**
  * Performs general matrix multiplication: res = mat1 * mat2.
- * mat1: (r1 x c1), mat2: (c1 x c2), res: (r1 x c2).
+ * Args:
+ *   mat1: The first matrix (dimensions: rows1 x cols1).
+ *   mat2: The second matrix (dimensions: cols1 x cols2).
+ *   res: The result matrix (dimensions: rows1 x cols2) to store the product.
+ *   rows1: The number of rows in mat1.
+ *   cols1: The number of columns in mat1 (and rows in mat2).
+ *   cols2: The number of columns in mat2 (and res).
  */
 void matrix_mul(double **mat1, double **mat2, double **res, int rows1, int cols1, int cols2) {
     int i, j, l;
@@ -86,6 +103,12 @@ void matrix_mul(double **mat1, double **mat2, double **res, int rows1, int cols1
 /**
  * Calculates the squared Frobenius norm of the difference between two matrices.
  * Used to check the convergence condition (Epsilon).
+ * Args:
+ *   mat1: The first matrix (dimensions: rows x cols).
+ *   mat2: The second matrix (dimensions: rows x cols).
+ *   rows: The number of rows in the matrices.
+ *   cols: The number of columns in the matrices.
+ * Returns the squared Frobenius norm of the difference.
  */
 double frobenius_norm_sq_diff(double **mat1, double **mat2, int rows, int cols) {
     int i, j;
@@ -106,6 +129,11 @@ double frobenius_norm_sq_diff(double **mat1, double **mat2, int rows, int cols) 
  * Formula: a_ij = exp(-||xi - xj||^2 / 2) for i != j, else 0.
  * Note: works only with close points due to the exponential decay!
  * If similarity matrix is all zero, it's probable that the data points are too far apart.
+ * Args:
+ *   x: The input data matrix (dimensions: n x d).
+ *   a: The output similarity matrix (dimensions: n x n) to be filled.
+ *   n: The number of data points (rows in X).
+ *   d: The dimension of each data point (columns in X).
  */
 void compute_sym(double **X, double **A, int n, int d) {
     int i, j, k;
@@ -126,6 +154,10 @@ void compute_sym(double **X, double **A, int n, int d) {
 /**
  * Step 1.2: Computes the Diagonal Degree Matrix D.
  * Formula: d_ii = sum of row i in A.
+ * Args:
+ *   a: The similarity matrix (dimensions: n x n).
+ *   d: The output diagonal degree matrix (dimensions: n x n) to be filled.
+ *   n: The number of data points (rows/columns in A).
  */
 void compute_ddg(double **A, double **D, int n) {
     int i, j;
@@ -140,6 +172,11 @@ void compute_ddg(double **A, double **D, int n) {
 /**
  * Step 1.3: Computes the Normalized Similarity Matrix W. notice that D is diagonal, so we only need the diagonal elements for the computation.
  * Formula: W = D^-0.5 * A * D^-0.5.
+ * Args:
+ *   a: The similarity matrix (dimensions: n x n).
+ *   d: The diagonal degree matrix (dimensions: n x n).
+ *   w: The output normalized similarity matrix (dimensions: n x n) to be filled.
+ *   n: The number of data points (rows/columns in A and D).
  */
 void compute_norm(double **A, double **D, double **W, int n) {
     int i, j;
@@ -154,6 +191,14 @@ void compute_norm(double **A, double **D, double **W, int n) {
  * Step 1.4.2: Performs a single update iteration of matrix H.
  * Formula: H = H * (0.5 + 0.5 * (WH / (HH^T)H)).
  * Uses pre-allocated auxiliary matrices to optimize performance.
+ * Args:
+ *   w: The normalized similarity matrix (dimensions: n x n).
+ *   h: The current factor matrix (dimensions: n x k) to be updated.
+ *   wh: Auxiliary matrix to store W * H (dimensions: n x k).
+ *   hht: Auxiliary matrix to store H * H^T (dimensions: n x n).
+ *   hhth: Auxiliary matrix to store (H * H^T) * H (dimensions: n x k).
+ *   n: The number of data points (rows in W and H).
+ *   k: The number of clusters (columns in H).
  */
 void update_h_step(double **W, double **H, double **WH, double **HHT, double **HHTH, int n, int k) {
     int i, j, l;
@@ -182,6 +227,11 @@ void update_h_step(double **W, double **H, double **WH, double **HHT, double **H
 /**
  * Performs the full SymNMF iterative algorithm.
  * Runs up to 300 iterations or until convergence (epsilon = 1e-4).
+ * Args:
+ *   w: The normalized similarity matrix (dimensions: n x n).
+ *   h: The factor matrix (dimensions: n x k) to be updated in-place.
+ *   n: The number of data points (rows in W and H).
+ *   k: The number of clusters (columns in H).
  */
 void symnmf_algorithm(double **W, double **H, int n, int k) {
     int iter;
@@ -211,6 +261,10 @@ void symnmf_algorithm(double **W, double **H, int n, int k) {
 /**
  * Counts the number of points (n) and the dimension (d) in the input file.
  * Assumes the file is formatted as comma-separated values.
+ * Args:
+ *   filename: The name of the input file containing the data points.
+ *   n: Pointer to an integer where the number of points will be stored.
+ *   d: Pointer to an integer where the dimension will be stored.
  */
 void get_dimensions(char *filename, int *n, int *d) {
     FILE *f = fopen(filename, "r");
@@ -236,6 +290,11 @@ void get_dimensions(char *filename, int *n, int *d) {
 
 /**
  * Reads the data points from the file into a pre-allocated 2D array.
+ * Args:
+ *   filename: The name of the input file containing the data points.
+ *   n: The number of points (rows) to read.
+ *   d: The dimension (columns) of each point to read.
+ * Returns a pointer to the 2D array containing the data points.
  */
 double** load_from_file(char *filename, int n, int d) {
     int i, j;
@@ -263,6 +322,10 @@ double** load_from_file(char *filename, int n, int d) {
 
 /**
  * Helper to print a matrix in the required format (4 decimal places).
+ * Args:
+ *   mat: The 2D array to be printed.
+ *   rows: The number of rows in the matrix.
+ *   cols: The number of columns in the matrix.
  */
 void print_matrix(double **mat, int rows, int cols) {
     int i, j;
@@ -277,16 +340,19 @@ void print_matrix(double **mat, int rows, int cols) {
 /**
  * Main execution logic for the C standalone program.
  * Supports goals: sym, ddg, norm.
+ * Usage: ./symnmf <goal> <input_file>
+ *   - goal: "sym" to compute similarity matrix, "ddg" for diagonal degree matrix, "norm" for normalized similarity matrix.
+ *   - input_file: The file containing the data points in comma-separated format.
+ * The program reads the data, computes the requested matrix, and prints it in the required format.
  */
 int main(int argc, char **argv) {
     char *goal, *file_name;
     int n = 0, d = 0;
     double **X, **A, **D, **W;
 
-    if (argc < 3){
+    if (argc != 3){
        handle_error();
     }
-
     goal = argv[1];
     file_name = argv[2];
 
@@ -330,6 +396,5 @@ int main(int argc, char **argv) {
     /* Step 4: Final memory cleanup */
     free_matrix(X, n);
     free_matrix(A, n);
-
     return 0;
 }
